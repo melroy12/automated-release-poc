@@ -15,17 +15,24 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # This is required so GitHub Actions can see the 'main' branch
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      - name: Get base swagger.json from main branch
+        run: |
+          # Try to extract the swagger file from the main branch to compare against
+          git show origin/main:swagger.json > swagger_base.json || echo '{"paths":{}}' > swagger_base.json
+
       - name: Create or Update dev -> main PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Generate PR body from swagger
+          # Run the script (which will now compare swagger.json vs swagger_base.json)
           PR_BODY=$(node scripts/parse_swagger.js)
           
           # Look for an existing PR from 'dev' to 'main'

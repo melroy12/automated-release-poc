@@ -637,6 +637,54 @@
           }
         }
       }
+    },
+    "/v2/projects/{project_id}/audit-logs": {
+      "get": {
+        "summary": "Retrieve Project Audit Logs",
+        "responses": {
+          "200": {
+            "description": "Returns a paginated list of audit events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "events": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "example": "evt_001" },
+                              "action": { "type": "string", "example": "ARTICLE_PUBLISHED" },
+                              "actorId": { "type": "string", "example": "usr_999" },
+                              "timestamp": { "type": "string", "example": "2026-04-19T11:00:00Z" }
+                            }
+                          }
+                        },
+                        "hasMore": { "type": "boolean", "example": false }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T11:05:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Only Project Admins can view audit logs"
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        }
+      }
     }
   }
 }
