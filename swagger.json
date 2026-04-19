@@ -579,6 +579,65 @@
           }
         }
       }
+    },
+    "/v2/projects/{project_id}/export": {
+      "post": {
+        "summary": "Export Project Analytics and Articles",
+        "responses": {
+          "202": {
+            "description": "Export job queued successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "jobId": { "type": "string", "example": "job_987xyz" },
+                        "estimatedCompletionTime": { "type": "string", "example": "2 minutes" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:45:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid export parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "INVALID_FORMAT" },
+                        "message": { "type": "string", "example": "Requested format 'xml' is not supported" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:45:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - User does not have permission to export this project"
+          },
+          "500": {
+            "description": "Internal server error - Failed to queue export job"
+          }
+        }
+      }
     }
   }
 }
+
