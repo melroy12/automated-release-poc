@@ -10,10 +10,572 @@
         "summary": "Rewrite Article User Trigger",
         "responses": {
           "200": {
-            "description": "Returns currentStatus: PROCESSING and dynamodbInserted: true"
+            "description": "Returns currentStatus: PROCESSING and dynamodbInserted: true",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "currentStatus": { "type": "string", "example": "PROCESSING" },
+                        "dynamodbInserted": { "type": "boolean", "example": true }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
           },
           "400": {
-            "description": "Missing subKeywordId OR rewrite_user_trigger_generation_count is 0"
+            "description": "Missing subKeywordId OR rewrite_user_trigger_generation_count is 0",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "MISSING_REQUIRED_FIELD" },
+                        "message": { "type": "string", "example": "Missing subKeywordId" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - User does not have permission to access this project"
+          },
+          "404": {
+            "description": "Project not found"
+          },
+          "429": {
+            "description": "Rate limit exceeded - Too many requests"
+          },
+          "500": {
+            "description": "Internal server error - Failed to process request"
+          }
+        }
+      }
+    },
+    "/v2/projects/{project_id}/articles": {
+      "get": {
+        "summary": "List All Articles for Project",
+        "responses": {
+          "200": {
+            "description": "Returns array of articles with metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "articles": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" },
+                              "title": { "type": "string" },
+                              "status": { "type": "string" }
+                            }
+                          }
+                        },
+                        "total": { "type": "number", "example": 42 }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid pagination parameters (limit/offset out of range)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "INVALID_PAGINATION" },
+                        "message": { "type": "string", "example": "Invalid pagination parameters" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - User does not have permission to access this project"
+          },
+          "404": {
+            "description": "Project not found"
+          },
+          "500": {
+            "description": "Internal server error - Database query failed"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create New Article",
+        "responses": {
+          "201": {
+            "description": "Article created successfully with generated ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "articleId": { "type": "string", "example": "art_abc123" },
+                        "slug": { "type": "string", "example": "my-new-article" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid article data - Missing required fields (title, content) or invalid format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "MISSING_REQUIRED_FIELD" },
+                        "message": { "type": "string", "example": "Missing required fields: title, content" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - User does not have permission to create articles in this project"
+          },
+          "409": {
+            "description": "Conflict - Article with same slug already exists"
+          },
+          "413": {
+            "description": "Payload too large - Article content exceeds maximum size"
+          },
+          "500": {
+            "description": "Internal server error - Failed to create article"
+          },
+          "503": {
+            "description": "Service unavailable - Database connection timeout"
+          }
+        }
+      }
+    },
+    "/v2/projects/{project_id}/articles/{article_id}": {
+      "get": {
+        "summary": "Get Article by ID",
+        "responses": {
+          "200": {
+            "description": "Returns article details with full content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "example": "art_abc123" },
+                        "title": { "type": "string", "example": "How to Build APIs" },
+                        "content": { "type": "string", "example": "Full article content..." },
+                        "status": { "type": "string", "example": "published" },
+                        "createdAt": { "type": "string", "example": "2026-04-15T09:00:00Z" },
+                        "updatedAt": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "UNAUTHORIZED" },
+                        "message": { "type": "string", "example": "Invalid or missing authentication token" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - User does not have permission to view this article"
+          },
+          "404": {
+            "description": "Article not found or project not found"
+          },
+          "500": {
+            "description": "Internal server error - Failed to retrieve article"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Article",
+        "responses": {
+          "200": {
+            "description": "Article updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "articleId": { "type": "string", "example": "art_abc123" },
+                        "updatedFields": { "type": "array", "items": { "type": "string" }, "example": ["title", "content"] }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid update data - Invalid field values or format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "INVALID_INPUT" },
+                        "message": { "type": "string", "example": "Invalid field values or format" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - User does not have permission to update this article"
+          },
+          "404": {
+            "description": "Article not found"
+          },
+          "409": {
+            "description": "Conflict - Version mismatch (optimistic locking)"
+          },
+          "500": {
+            "description": "Internal server error - Failed to update article"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Article",
+        "responses": {
+          "204": {
+            "description": "Article deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deletedId": { "type": "string", "example": "art_abc123" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "UNAUTHORIZED" },
+                        "message": { "type": "string", "example": "Invalid or missing authentication token" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - User does not have permission to delete this article"
+          },
+          "404": {
+            "description": "Article not found"
+          },
+          "409": {
+            "description": "Conflict - Article has dependent resources that must be deleted first"
+          },
+          "500": {
+            "description": "Internal server error - Failed to delete article"
+          }
+        }
+      }
+    },
+    "/v2/projects/{project_id}/analytics": {
+      "get": {
+        "summary": "Get Project Analytics",
+        "responses": {
+          "200": {
+            "description": "Returns analytics data including views, engagement metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalViews": { "type": "number", "example": 15234 },
+                        "uniqueVisitors": { "type": "number", "example": 8421 },
+                        "avgEngagementTime": { "type": "number", "example": 127.5 },
+                        "dateRange": {
+                          "type": "object",
+                          "properties": {
+                            "start": { "type": "string", "example": "2026-04-01" },
+                            "end": { "type": "string", "example": "2026-04-19" }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date range or analytics parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "INVALID_DATE_RANGE" },
+                        "message": { "type": "string", "example": "Invalid date range or analytics parameters" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - User does not have analytics access for this project"
+          },
+          "404": {
+            "description": "Project not found"
+          },
+          "500": {
+            "description": "Internal server error - Analytics processing failed"
+          },
+          "504": {
+            "description": "Gateway timeout - Analytics query took too long"
+          }
+        }
+      }
+    },
+    "/v2/users/{user_id}/preferences": {
+      "get": {
+        "summary": "Get User Preferences",
+        "responses": {
+          "200": {
+            "description": "Returns user preference settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "theme": { "type": "string", "example": "dark" },
+                        "notifications": { "type": "boolean", "example": true },
+                        "language": { "type": "string", "example": "en-US" },
+                        "timezone": { "type": "string", "example": "America/New_York" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "UNAUTHORIZED" },
+                        "message": { "type": "string", "example": "Invalid or missing authentication token" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Cannot access another user's preferences"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error - Failed to retrieve preferences"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update User Preferences",
+        "responses": {
+          "200": {
+            "description": "Preferences updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "updatedPreferences": { "type": "array", "items": { "type": "string" }, "example": ["theme", "notifications"] }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid preference values or unsupported preference keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "INVALID_PREFERENCE" },
+                        "message": { "type": "string", "example": "Invalid preference values or unsupported keys" }
+                      }
+                    },
+                    "timestamp": { "type": "string", "example": "2026-04-19T10:30:00Z" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Cannot modify another user's preferences"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Unprocessable entity - Preference validation failed"
+          },
+          "500": {
+            "description": "Internal server error - Failed to update preferences"
           }
         }
       }

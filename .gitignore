@@ -1,0 +1,13 @@
+# Generated files
+final_pr_body.md
+
+# Node modules (if added in future)
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
