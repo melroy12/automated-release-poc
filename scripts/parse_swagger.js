@@ -77,7 +77,15 @@ const template = fs.readFileSync('.github/release_template.md', 'utf8');
 // 4. Inject the endpoint markdown into the placeholder
 const finalBody = template.replace('---', endpointMd);
 
-// 5. Save the final PR body so GitHub Actions can use it
-fs.writeFileSync('final_pr_body.md', finalBody);
-console.log("✅ Successfully generated final_pr_body.md!");
-console.log(`📊 Processed ${Object.keys(swagger.paths).length} endpoint(s) with response structures dynamically extracted from swagger.json`);
+// 5. Output to stdout for GitHub Actions to capture
+// Check if we should write to file (for local testing) or stdout (for CI/CD)
+if (process.env.CI || process.argv.includes('--output')) {
+  // In CI/CD: output to stdout
+  console.log(finalBody);
+} else {
+  // Local mode: show summary only
+  console.error("Successfully parsed swagger.json!");
+  console.error(`Processed ${Object.keys(swagger.paths).length} endpoint(s) with response structures.`);
+  console.error("\nTo see the output, run: node scripts/parse_swagger.js --output");
+  console.error("In CI/CD, this will automatically update the PR description.");
+}
