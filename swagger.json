@@ -1,0 +1,22 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "SWFT Dummy API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v2/projects/{project_id}/keyword/user-trigger": {
+      "put": {
+        "summary": "Rewrite Article User Trigger",
+        "responses": {
+          "200": {
+            "description": "Returns currentStatus: PROCESSING and dynamodbInserted: true"
+          },
+          "400": {
+            "description": "Missing subKeywordId OR rewrite_user_trigger_generation_count is 0"
+          }
+        }
+      }
+    }
+  }
+}

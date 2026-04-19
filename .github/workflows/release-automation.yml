@@ -1,0 +1,41 @@
+name: Generate Automated Release PR
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-pr-description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Parse Swagger and Generate Template
+        run: node scripts/parse_swagger.js
+
+      - name: Create or Update dev -> main PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Look for an existing PR from 'dev' to 'main'
+          PR_NUMBER=$(gh pr list --head dev --base main --state open --json number --jq '.[0].number')
+          
+          # 2. If no PR exists, create one. If it does exist, update the body!
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No existing PR found. Creating a new one from dev to main..."
+            gh pr create --head dev --base main --title "🚀 Release: dev to main" --body-file final_pr_body.md
+          else
+            echo "Found existing PR #$PR_NUMBER. Updating description..."
+            gh pr edit $PR_NUMBER --body-file final_pr_body.md
+          fi
