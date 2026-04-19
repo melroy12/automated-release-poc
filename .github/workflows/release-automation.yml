@@ -1,0 +1,36 @@
+name: Generate Automated Release PR
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Parse Swagger and Generate Template
+        run: node scripts/parse_swagger.js
+
+      - name: Create or Update Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update release procedure documentation"
+          branch: release/dev-to-main
+          base: main
+          title: "🚀 Release: dev to main"
+          body-path: final_pr_body.md
+          labels: "release-procedure"
