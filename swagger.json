@@ -685,6 +685,64 @@
           }
         }
       }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check Endpoint",
+        "responses": {
+          "200": {
+            "description": "Service is healthy and operational",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "healthy" },
+                    "timestamp": { "type": "string", "example": "2026-05-06T10:00:00Z" },
+                    "version": { "type": "string", "example": "1.0.0" },
+                    "uptime": { "type": "number", "example": 3600 },
+                    "checks": {
+                      "type": "object",
+                      "properties": {
+                        "database": { "type": "string", "example": "ok" },
+                        "cache": { "type": "string", "example": "ok" },
+                        "storage": { "type": "string", "example": "ok" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is unhealthy or degraded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "unhealthy" },
+                    "timestamp": { "type": "string", "example": "2026-05-06T10:00:00Z" },
+                    "checks": {
+                      "type": "object",
+                      "properties": {
+                        "database": { "type": "string", "example": "failed" },
+                        "cache": { "type": "string", "example": "ok" },
+                        "storage": { "type": "string", "example": "degraded" }
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "example": ["Database connection timeout", "Storage latency high"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
