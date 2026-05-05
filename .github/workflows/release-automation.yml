@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - dev
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update existing PR'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -22,6 +29,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package*.json'
 
       - name: Get base swagger.json from main branch
         run: |
@@ -34,6 +43,12 @@ jobs:
         run: |
           # Run the script (which will now compare swagger.json vs swagger_base.json)
           PR_BODY=$(node scripts/parse_swagger.js)
+          EXIT_CODE=$?
+          
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Error: Failed to parse swagger files"
+            exit 1
+          fi
           
           # Look for an existing PR from 'dev' to 'main'
           PR_NUMBER=$(gh pr list --head dev --base main --state open --json number --jq '.[0].number')
@@ -41,8 +56,15 @@ jobs:
           # If no PR exists, create one. If it does exist, update the body!
           if [ -z "$PR_NUMBER" ]; then
             echo "No existing PR found. Creating a new one from dev to main..."
-            echo "$PR_BODY" | gh pr create --head dev --base main --title "🚀 Release: dev to main" --body-file -
+            PR_URL=$(echo "$PR_BODY" | gh pr create --head dev --base main --title "🚀 Release: dev to main" --body-file -)
+            echo "✅ Created new PR: $PR_URL"
+            echo "## 🚀 Release PR Created" >> $GITHUB_STEP_SUMMARY
+            echo "New PR: $PR_URL" >> $GITHUB_STEP_SUMMARY
           else
             echo "Found existing PR #$PR_NUMBER. Updating description..."
             echo "$PR_BODY" | gh pr edit $PR_NUMBER --body-file -
+            PR_URL=$(gh pr view $PR_NUMBER --json url --jq '.url')
+            echo "✅ Updated existing PR #$PR_NUMBER"
+            echo "## 📝 Release PR Updated" >> $GITHUB_STEP_SUMMARY
+            echo "Updated PR: $PR_URL" >> $GITHUB_STEP_SUMMARY
           fi
